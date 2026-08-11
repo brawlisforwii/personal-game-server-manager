@@ -17,48 +17,93 @@ async function mcInfo(url, idToken) {
     
     //Storing data in form of JSON
     var data = await response.json();
-    if (response) {
-        hideloader(data);
-    }
-    show(data);
+    renderTable(data);
 }
- 
-// Function to hide the loaders
-function hideloader(data) {
-    var loads = document.getElementsByClassName("Loading");
-    for(var i=0; i<loads.length;i++){
-        loads[i].style.display = 'none';
-    }
-}
-// Function to define innerHTML for HTML table
-async function show(data) {
-    var instance = data[1]["Instances"][0];
-    document.getElementById('mcInfoDNS').innerHTML = instance["DomainName"];
-    document.getElementById('mcInfoState').innerHTML = instance["State"];
-    document.getElementById('mcInfoIP').innerHTML = instance["PublicIpAddress"];
-    document.getElementById('mcInfoType').innerHTML = instance["InstanceType"];
 
-    //Check if Domain exists and then lookup IP to see if it matches IP on console.
-    //Show card as red if this doesn't match
-    if (data[1]["Instances"][0]["DomainName"] != "") {
-      var DomainName2IP = await dnsLookup(data[1]["Instances"][0]["DomainName"]);
-      if (DomainName2IP != data[1]["Instances"][0]["PublicIpAddress"]) {
-        var dnsCard = document.getElementById('mcInfoDNS').parentNode;
-        dnsCard.style.backgroundColor = '#FF0000';
-        dnsCard.style.opacity = '0.7';
-      }
-      else {
-        var dnsCard = document.getElementById('mcInfoDNS').parentNode;
-        dnsCard.style.backgroundColor = '#18BEFF';
-        dnsCard.style.opacity = '1';
-      }
+// Maps raw instance State to a badge CSS class
+function mcStateBadgeClass(state) {
+  if (state === 'running') return 'running';
+  if (state === 'stopped') return 'stopped';
+  return 'pending';
+}
+
+// Renders one row per instance, preserving which row (if any) is currently expanded
+async function renderTable(data) {
+    var instances = (data && data[1] && data[1]["Instances"]) || [];
+    var tbody = document.getElementById('mcServerTableBody');
+    var previouslySelectedInstanceId = tbody.querySelector('tr.mcServerRow.selected') ? tbody.querySelector('tr.mcServerRow.selected').dataset.instanceId : null;
+
+    if (instances.length === 0) {
+      tbody.innerHTML = '<tr class="mcLoadingRow"><td colspan="5">No gaming server instances found</td></tr>';
+      return;
     }
-    else {
-      document.getElementById('mcInfoDNS').innerHTML = "Loading...";
-      var dnsCard = document.getElementById('mcInfoDNS').parentNode;
-      dnsCard.style.backgroundColor = '#FF0000';
-      dnsCard.style.opacity = '0.7';
-    }
+
+    tbody.innerHTML = '';
+    instances.forEach(function (instance) {
+      var row = document.createElement('tr');
+      row.className = 'mcServerRow';
+      row.dataset.instanceId = instance['InstanceId'];
+      row.onclick = function () { toggleServerRow(row); };
+
+      var badgeClass = mcStateBadgeClass(instance['State']);
+      var dns = instance['DomainName'] && instance['DomainName'] !== 'No domain tag found' ? instance['DomainName'] : '—';
+
+      row.innerHTML =
+        '<td><span class="mcChevron">▸</span></td>' +
+        '<td><span class="mcDnsDot" data-dns-dot></span>' + dns + '</td>' +
+        '<td>' + (instance['PublicIpAddress'] || '—') + '</td>' +
+        '<td><span class="mcBadge ' + badgeClass + '">' + instance['State'] + '</span></td>' +
+        '<td>' + instance['InstanceType'] + '</td>';
+
+      var detailRow = document.createElement('tr');
+      detailRow.className = 'mcServerDetail hidden';
+      detailRow.innerHTML =
+        '<td colspan="5"><div class="mcDetailInner">' +
+        '<button class="btn stop">Stop</button>' +
+        '<button class="btn start">Start</button>' +
+        '<select class="mcResizeSelect">' +
+        '<option value="micro">Micro</option>' +
+        '<option value="small">Small</option>' +
+        '<option value="medium">Medium</option>' +
+        '<option value="large">Large</option>' +
+        '</select>' +
+        '<button class="btn primary">Resize</button>' +
+        '</div></td>';
+
+      var select = detailRow.querySelector('select');
+      detailRow.querySelector('.stop').onclick = function (e) { e.stopPropagation(); showAlert('Stopping the Server'); stopServer(); };
+      detailRow.querySelector('.start').onclick = function (e) { e.stopPropagation(); showAlert('Starting the Server'); startServer(); };
+      detailRow.querySelector('.primary').onclick = function (e) { e.stopPropagation(); showAlert('Please wait... Resizing your server'); resizeServer(select.value); };
+      detailRow.onclick = function (e) { e.stopPropagation(); };
+
+      tbody.appendChild(row);
+      tbody.appendChild(detailRow);
+
+      if (previouslySelectedInstanceId && previouslySelectedInstanceId === row.dataset.instanceId) {
+        row.classList.add('selected');
+        detailRow.classList.remove('hidden');
+      }
+
+      // Async DNS-vs-actual-IP check; updates the dot without blocking the initial render
+      if (dns !== '—') {
+        dnsLookup(dns).then(function (resolvedIp) {
+          var dot = row.querySelector('[data-dns-dot]');
+          if (!dot) return;
+          dot.classList.add(resolvedIp === instance['PublicIpAddress'] ? 'match' : 'mismatch');
+        });
+      }
+    });
+}
+
+function toggleServerRow(rowEl) {
+  var detailRow = rowEl.nextElementSibling;
+  var wasSelected = rowEl.classList.contains('selected');
+  document.querySelectorAll('tr.mcServerRow').forEach(function (r) { r.classList.remove('selected'); });
+  document.querySelectorAll('tr.mcServerDetail').forEach(function (r) { r.classList.add('hidden'); });
+  if (!wasSelected) {
+    rowEl.classList.add('selected');
+    detailRow.classList.remove('hidden');
+  }
 }
 
 function showAlert(text) {
@@ -119,9 +164,8 @@ async function startServer() {
   }
 }
 
-async function resizeServer() {
-  var SIZE = document.getElementById("instanceSize");
-  var resizeUrl = API_URL + "resize/" + query_string + "&resize=" + SIZE.value
+async function resizeServer(size) {
+  var resizeUrl = API_URL + "resize/" + query_string + "&resize=" + size
   //checkLogin();
   var jwt = await getJwt();
 
@@ -162,8 +206,14 @@ function sleep(ms) {
 
 function updatelinks() {
   document.getElementById("home").setAttribute("href", mcCloudfrontUrl);
-  document.getElementById("server").setAttribute("href", "https://console.aws.amazon.com/ec2/v2/home?#Instances:search=" + tagValue); 
-  document.getElementById("cfnstack").setAttribute("href", "https://console.aws.amazon.com/cloudformation/home?#/stacks?filteringStatus=active&filteringText=" + stackname + "&viewNested=true&hideStacks=false&stackId=");
+}
+
+async function updateAuthButtons() {
+  const loggedIn = await isLoggedIn();
+  const signInBtn = document.getElementById('signInBtn');
+  const signOutBtn = document.getElementById('signOutBtn');
+  if (signInBtn) signInBtn.style.display = loggedIn ? 'none' : 'block';
+  if (signOutBtn) signOutBtn.style.display = loggedIn ? 'block' : 'none';
 }
 
 
@@ -180,6 +230,7 @@ async function init() {
   Amplify.configure(aws_auth_config)
 
   await authIfNeeded();
+  await updateAuthButtons();
 
   refreshData();
   setInterval(refreshData, 5000);
@@ -232,6 +283,7 @@ async function checkLogin() {
 }
 
 function DoSignIn() {
+  const { Auth } = aws_amplify_auth;
   Auth.federatedSignIn({
     provider: 'COGNITO',
     domain: mcCognitoDomainName
@@ -240,6 +292,7 @@ function DoSignIn() {
 
 async function isLoggedIn() {
   try {     
+    const { Auth } = aws_amplify_auth;
     await Auth.currentAuthenticatedUser();
     console.log("True")
     return true

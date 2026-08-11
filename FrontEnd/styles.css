@@ -3,24 +3,30 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 SPDX-License-Identifier: MIT-0
 */
 
-/* -- Amazon Colours -- */
-/* White (background & text) #FFFFFF */
-/* SquidInk #232F3E */
-/* DarkSquidInk #161E2D */
-/* Smile (buttons & footer text) #FF9900 */
+/* -- Palette -- */
+/* White       #FFFFFF */
+/* Grey-1 (bg) #F4F5F7 */
+/* Grey-2 (ln) #E4E7EB */
+/* Grey-3 (tx) #8A94A6 */
+/* Dark header #1B2430 */
+/* Cyan        #18BEFF */
+/* Cyan-dark   #00A4E4 */
 
+:root {
+    --cyan: #18BEFF;
+    --cyan-dark: #00A4E4;
+    --grey-1: #F4F5F7;
+    --grey-2: #E4E7EB;
+    --grey-3: #8A94A6;
+    --dark: #1B2430;
+    --text: #1B2430;
+    --white: #FFFFFF;
+}
 
-/* -- Alt Colours -- */
-/* Background - #FFFFFF */
-/* Boxes - #18BEFF */
-/* Boxes-Hover - #00A4E4 */
-/* Buttons - #FF9901 */
-
-
-/* ########## Defaults ################### */
+* { box-sizing: border-box; }
 
 html {
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     padding-bottom: 4em;
 }
 
@@ -31,8 +37,8 @@ nav, header, footer {
 body {
     line-height: 1;
     margin: 0;
-    background-color: #FFFFFF;
-    /* background-color: #FFFFFF; */
+    background-color: var(--white);
+    color: var(--text);
 }
 
 /* ########## Nav Bar #################### */
@@ -43,8 +49,7 @@ nav {
 }
 
 nav ul {
-    background-color: #18BEFF;
-    /* background-color: #232F3E; */
+    background-color: var(--dark);
     overflow: hidden;
     margin: 0;
     padding: 0;
@@ -66,18 +71,20 @@ ul.top-nav li a {
     min-height: 16px;
     text-align: center;
     padding: 14px;
-    text-transform: uppercase;
-    color: #FFFFFF;
-    /* color: #FFFFFF; */
-    background-color: #18BEFF;
-    /* background-color: #232F3E; */
+    color: #A7B0BE;
+    background-color: var(--dark);
+    font-size: 13px;
 }
 
 ul.top-nav li a:hover {
-    background-color: #FF9901;
-    /* background-color: #FF9900; */
-    color: #00A4E4;
-    /* color: #232F3E; */
+    background-color: #29303D;
+    color: var(--white);
+}
+
+ul.top-nav li a#signOutBtn,
+ul.top-nav li a#signInBtn {
+    color: var(--cyan);
+    font-weight: 600;
 }
 
 ul.top-nav li.dropdownIcon {
@@ -102,10 +109,6 @@ ul.top-nav li.dropdownIcon {
         right: 0;
     }
 
-    ul.top-nav.responsive li.sep {
-        display: none;
-    }
-
     ul.top-nav.responsive {
         position: relative;
     }
@@ -121,131 +124,206 @@ ul.top-nav li.dropdownIcon {
     }
 }
 
-/* ############## McInfo ############## */
+/* ############## Page ############## */
 
-/* Float two columns side by side */
-.Infocolumn {
-    float: left;
-    width: 50%;
-  }
-  
-  /* Remove extra left and right margins, due to padding */
-  .mcInfo {margin: -5px;}
-  
-  /* Clear floats after the columns */
-  .mcInfo:after {
-    content: "";
-    display: table;
-    clear: both;
-  }
-  
-  /* Responsive columns */
-  @media screen and (max-width: 680px) {
-    .Infocolumn {
-      width: 100%;
-      display: block;
-      margin-bottom: 20px;
-    }
-  }
-
-/* ############## mcControl ############## */
-.Controlcolumn {
-    float: left;
-    width: 33.3%;
-  }
-  
-  /* Remove extra left and right margins, due to padding */
-.mcControl {margin: -5px;}
-  
-  /* Clear floats after the columns */
-.mcControl:after {
-    content: "";
-    display: table;
-    clear: both;
+main {
+    padding: 24px 28px;
+    max-width: 1100px;
+    margin: 0 auto;
 }
 
-.mcControl .card button {
-    padding: 5px;
-    margin: 15px;
-    color: #000000;
-    /* color: #00A4E4; */
-    /* color: #FFFFFF; */
-    font-size: 1em;
-    text-decoration: none;
-    background-color: #FF9901;
-    /* background-color: #FF9900; */
-    opacity: 0.9;
-    border: none;
-    border-radius: 3px;
+.page-title {
+    margin-bottom: 16px;
 }
 
-.mcControl .card button:hover {
-    background-color: #FF9901;
-    /* background-color: #FF9900; */
-    opacity: 1;
-    transform: scale(1.1);
+.page-title h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
 }
 
-.mcControl .card button:focus {
+/* ############## Buttons ############## */
+
+.btn {
+    border: 1px solid var(--grey-2);
+    background: var(--white);
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text);
+}
+
+.btn:hover {
+    background: var(--grey-1);
+}
+
+.btn:focus {
     outline: none;
-    box-shadow: none;
 }
 
-.mcControl .card label {
-    font-weight: bold;
-    font-size: 1.17em;
+.btn.primary {
+    background: var(--cyan);
+    color: var(--white);
+    border-color: var(--cyan);
 }
 
-.mcControl .Controlcolumn .card select {
-    margin: 0px;
-    border: none;
+.btn.primary:hover {
+    background: var(--cyan-dark);
+}
+
+.btn.stop {
+    background: #3A4557;
+    color: var(--white);
+    border-color: #3A4557;
+}
+
+.btn.stop:hover {
+    background: #29303D;
+}
+
+.btn.start {
+    background: var(--cyan);
+    color: var(--white);
+    border-color: var(--cyan);
+}
+
+.btn.start:hover {
+    background: var(--cyan-dark);
+}
+
+select.mcResizeSelect {
+    border: 1px solid var(--grey-2);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+/* ############## Server Table ############## */
+
+table.mcServerTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+table.mcServerTable thead th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--grey-3);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: .04em;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--grey-2);
+    background: var(--grey-1);
+}
+
+table.mcServerTable tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--grey-2);
+}
+
+table.mcServerTable tbody tr.mcServerRow {
+    cursor: pointer;
+}
+
+table.mcServerTable tbody tr.mcServerRow:hover {
+    background: var(--grey-1);
+}
+
+table.mcServerTable tbody tr.mcServerRow.selected {
+    background: #EAF8FF;
+}
+
+.mcChevron {
     display: inline-block;
-    font-size: 1.1em;
+    width: 10px;
+    transition: transform .15s ease;
+    color: var(--grey-3);
 }
 
-  /* Responsive columns */
-  @media screen and (max-width: 680px) {
-    .Controlcolumn {
-      width: 100%;
-      display: block;
-      margin-bottom: 20px;
-    }
-  }
+tr.mcServerRow.selected .mcChevron {
+    transform: rotate(90deg);
+}
 
-/* ############# Cards ################ */
-  
-  /* Style the counter cards */
-  .card {
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-    padding: 5px;
-    margin: 10px;
+.mcDnsDot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    background: var(--grey-2);
+}
+
+.mcDnsDot.match { background: var(--cyan); }
+.mcDnsDot.mismatch { background: #E4572E; }
+
+.mcBadge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.mcBadge.running { background: #E1F8EA; color: #16794E; }
+.mcBadge.stopped { background: var(--grey-2); color: var(--grey-3); }
+.mcBadge.pending,
+.mcBadge.stopping,
+.mcBadge.starting,
+.mcBadge.pending-resize { background: #FFF3D6; color: #92650A; }
+
+tr.mcServerDetail td {
+    background: var(--grey-1);
+    padding: 0;
+    border-bottom: 1px solid var(--grey-2);
+}
+
+.mcDetailInner {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hidden { display: none; }
+
+.mcLoadingRow td {
+    padding: 20px 12px;
     text-align: center;
-    background-color: #18BEFF;
-    /* background-color: #232F3E; */
-    color: #FFFFFF;
-    /* color: #FFFFFF; */
-    border-radius: 5px;
-  }
+    color: var(--grey-3);
+}
 
-  .card:hover {
-    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
-    background-color: #00A4E4;
-    /* background-color: #161E2D; */
-    transition: 0.3s;
-  }
+/* ############# Alert ################ */
 
+.alert {
+    padding: 12px 20px;
+    background-color: var(--dark);
+    color: var(--white);
+    margin: 16px 28px 0;
+    border-radius: 6px;
+}
+
+.alert .closebtn {
+    margin-left: 15px;
+    color: var(--white);
+    font-weight: bold;
+    float: right;
+    cursor: pointer;
+}
 
 /* ############## Footer ############### */
+
 .footer {
     position: fixed;
     left: 0;
     bottom: 0;
     width: 100%;
-    background-color: #00A4E4;
-    /* background-color: #232F3E; */
-    color: #FF9901;
-    /* color: #FF9900; */
+    background-color: var(--dark);
+    color: var(--cyan);
     text-align: center;
+    padding: 6px 0;
 }
 
 /* ################ Alerts ################### */
