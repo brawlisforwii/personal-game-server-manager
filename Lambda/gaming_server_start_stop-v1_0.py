@@ -11,6 +11,7 @@ def lambda_handler(event, context): #standard function called on lambda invocati
     
     mcTagKey = event['mcTagName'] #This is the Tag for the resources we're looking to handle
     mcTagValue = event['mcTagValue'] #This is the Tag for the resources we're looking to handle
+    mcTargetInstanceId = event.get('instanceId') #Optional - restricts start/stop/resize to a single instance instead of all tagged instances
     global ec2
     mcInstanceIds = [] 
     mcInfo = []
@@ -24,7 +25,17 @@ def lambda_handler(event, context): #standard function called on lambda invocati
         statusmessage = "No gaming server instances found" #sets errormessage variable to error text as shown
         return(statusmessage)
 
-    for i in mcInfo['Instances']:
+    #Determine which instances the start/stop/resize action should actually apply to.
+    #If instanceId was supplied, restrict to that single instance; otherwise fall back to all tagged instances.
+    if mcTargetInstanceId:
+        targetInstances = [i for i in mcInfo['Instances'] if i['InstanceId'] == mcTargetInstanceId]
+        if len(targetInstances) < 1:
+            statusmessage = "Requested instanceId was not found among your gaming server instances"
+            return(statusmessage, mcInfo)
+    else:
+        targetInstances = mcInfo['Instances']
+
+    for i in targetInstances:
         foundInstanceId = i['InstanceId']
         mcInstanceIds.append(foundInstanceId)
         
@@ -38,7 +49,7 @@ def lambda_handler(event, context): #standard function called on lambda invocati
             statusmessage = "Couldn't start servers, please try again later"
             return(statusmessage,mcInfo)
         try:
-            statemachineresponse = updateDnsStateFunc(mcInfo)
+            statemachineresponse = updateDnsStateFunc({'Instances': targetInstances})
             print(statemachineresponse)
             statusmessage = "Started Servers and updated DNS successfully"
         except:
@@ -52,7 +63,7 @@ def lambda_handler(event, context): #standard function called on lambda invocati
     elif event['command'] == "getInfo":
             statusmessage = "No action, just getting info"
     elif event['command'] == "reSize":
-        for i in mcInfo['Instances']:
+        for i in targetInstances:
             if i['State'] != "stopped":
                 statusmessage = "Your servers are not stopped. Please stop your servers and retry resizing them"
                 return (statusmessage,mcInfo)

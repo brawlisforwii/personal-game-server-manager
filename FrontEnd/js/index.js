@@ -70,10 +70,11 @@ async function renderTable(data) {
         '<button class="btn primary">Resize</button>' +
         '</div></td>';
 
+      var instanceId = instance['InstanceId'];
       var select = detailRow.querySelector('select');
-      detailRow.querySelector('.stop').onclick = function (e) { e.stopPropagation(); showAlert('Stopping the Server'); stopServer(); };
-      detailRow.querySelector('.start').onclick = function (e) { e.stopPropagation(); showAlert('Starting the Server'); startServer(); };
-      detailRow.querySelector('.primary').onclick = function (e) { e.stopPropagation(); showAlert('Please wait... Resizing your server'); resizeServer(select.value); };
+      detailRow.querySelector('.stop').onclick = function (e) { e.stopPropagation(); showAlert('Stopping the Server'); stopServer(instanceId); };
+      detailRow.querySelector('.start').onclick = function (e) { e.stopPropagation(); showAlert('Starting the Server'); startServer(instanceId); };
+      detailRow.querySelector('.primary').onclick = function (e) { e.stopPropagation(); showAlert('Please wait... Resizing your server'); resizeServer(select.value, instanceId); };
       detailRow.onclick = function (e) { e.stopPropagation(); };
 
       tbody.appendChild(row);
@@ -122,8 +123,8 @@ function dropdownMenu() {
   }
 }
 
-async function stopServer() {
-  var stopUrl = API_URL + "stop/" + query_string
+async function stopServer(instanceId) {
+  var stopUrl = API_URL + "stop/" + query_string + (instanceId ? "&instanceid=" + encodeURIComponent(instanceId) : "")
   //checkLogin();
   var jwt = await getJwt();
 
@@ -143,8 +144,8 @@ async function stopServer() {
   }
 }
 
-async function startServer() {
-  var startUrl = API_URL + "start/" + query_string
+async function startServer(instanceId) {
+  var startUrl = API_URL + "start/" + query_string + (instanceId ? "&instanceid=" + encodeURIComponent(instanceId) : "")
   //checkLogin();
   var jwt = await getJwt();
 
@@ -164,8 +165,8 @@ async function startServer() {
   }
 }
 
-async function resizeServer(size) {
-  var resizeUrl = API_URL + "resize/" + query_string + "&resize=" + size
+async function resizeServer(size, instanceId) {
+  var resizeUrl = API_URL + "resize/" + query_string + "&resize=" + encodeURIComponent(size) + (instanceId ? "&instanceid=" + encodeURIComponent(instanceId) : "")
   //checkLogin();
   var jwt = await getJwt();
 

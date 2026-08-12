@@ -23,6 +23,7 @@ Metadata:
         Parameters:
           - KeyName
           - HostedZoneId
+          - FrontEndDomain
           - Domain
           - ShutdownTimeHours
           - ShutdownTimeMins
@@ -45,6 +46,8 @@ Metadata:
         default: Select the key pair you will use to access server OS
       Domain:
         default: Enter the domain name you will use.  Note this should be controlled by the Hosted Zone above (see setup instructions earlier)
+      FrontEndDomain:
+        default: Optional custom domain for the web control site (same Hosted Zone as above)
       HostedZoneId:
         default: Enter the ARN for the Hosted Zone that contains your DNS records (see earlier step)
       IdTagName:
@@ -143,6 +146,10 @@ Parameters:
   Domain:
     Description: Domain name you will use to access your server (e.g. mygameserver.link).  This is optional however without it you will need to configure a new IP address each stop/start
     Type: String
+  FrontEndDomain:
+    Description: Optional domain name for the web control site (e.g. game-servers.mydomain.link). Must be in the same Hosted Zone as configured below. Leave blank to only use the default CloudFront domain.
+    Type: String
+    Default: ''
   HostedZoneId:
     Description: Select the ID of your hosted zone - if there isn't one please go back to the section that describes setting up a domain name and hosted zone
     Type: 'AWS::Route53::HostedZone::Id'
@@ -215,6 +222,10 @@ Conditions:
   ShutdownTimeMinsIsNull: !Equals
     - !Ref ShutdownTimeMins
     - 'None'
+  FrontEndDomainIsSet: !Not
+    - !Equals
+      - !Ref FrontEndDomain
+      - ''
   noSecIngress: !And
     - !Condition hasTCP
     - !Condition hasUDP
@@ -468,7 +479,7 @@ Resources:
                 application/json : ''
           PassthroughBehavior: WHEN_NO_TEMPLATES
           RequestTemplates: 
-            application/json : "{\r\n \"command\": \"start\",\r\n \"mcTagName\": \"$input.params('mctagname')\",\r\n \"mcTagValue\": \"$input.params('mctagvalue')\"\r\n}"
+            application/json : "{\r\n \"command\": \"start\",\r\n \"mcTagName\": \"$input.params('mctagname')\",\r\n \"mcTagValue\": \"$input.params('mctagvalue')\",\r\n \"instanceId\": \"$input.params('instanceid')\"\r\n}"
           TimeoutInMillis: 15000
           Type: AWS
           Uri: !Sub
@@ -484,6 +495,7 @@ Resources:
       RequestParameters: 
         method.request.querystring.mctagname : false
         method.request.querystring.mctagvalue : false
+        method.request.querystring.instanceid : false
       ResourceId: !Ref mcControlApiResStart
       RestApiId: !Ref mcControlApi
 
@@ -538,7 +550,7 @@ Resources:
                 application/json : ''
           PassthroughBehavior: WHEN_NO_TEMPLATES
           RequestTemplates: 
-            application/json : "{\r\n \"command\": \"stop\",\r\n \"mcTagName\": \"$input.params('mctagname')\",\r\n \"mcTagValue\": \"$input.params('mctagvalue')\"\r\n}"
+            application/json : "{\r\n \"command\": \"stop\",\r\n \"mcTagName\": \"$input.params('mctagname')\",\r\n \"mcTagValue\": \"$input.params('mctagvalue')\",\r\n \"instanceId\": \"$input.params('instanceid')\"\r\n}"
           TimeoutInMillis: 15000
           Type: AWS
           Uri: !Sub
@@ -554,6 +566,7 @@ Resources:
       RequestParameters: 
         method.request.querystring.mctagname : false
         method.request.querystring.mctagvalue : false
+        method.request.querystring.instanceid : false
       ResourceId: !Ref mcControlApiResStop
       RestApiId: !Ref mcControlApi
 
@@ -608,7 +621,7 @@ Resources:
                 application/json : ''
           PassthroughBehavior: WHEN_NO_TEMPLATES
           RequestTemplates: 
-            application/json : "{\r\n \"command\": \"reSize\",\r\n \"mcTagName\": \"$input.params('mctagname')\",\r\n \"mcTagValue\": \"$input.params('mctagvalue')\",\r\n \"reSizeType\": \"$input.params('resize')\"\r\n}"
+            application/json : "{\r\n \"command\": \"reSize\",\r\n \"mcTagName\": \"$input.params('mctagname')\",\r\n \"mcTagValue\": \"$input.params('mctagvalue')\",\r\n \"reSizeType\": \"$input.params('resize')\",\r\n \"instanceId\": \"$input.params('instanceid')\"\r\n}"
           TimeoutInMillis: 15000
           Type: AWS
           Uri: !Sub
@@ -625,6 +638,7 @@ Resources:
         method.request.querystring.mctagname : false
         method.request.querystring.mctagvalue : false
         method.request.querystring.resize : false
+        method.request.querystring.instanceid : false
       ResourceId: !Ref mcControlApiResResize
       RestApiId: !Ref mcControlApi
 
@@ -1305,6 +1319,17 @@ Resources:
         ViewerCertificate: 
             CloudFrontDefaultCertificate: True
 
+  mcFrontEndRoute53Alias:
+    Type: AWS::Route53::RecordSet
+    Condition: FrontEndDomainIsSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref FrontEndDomain
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt mcCloudFront.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
+        EvaluateTargetHealth: true
 
   mcStartStopLambdaPermissionGetInfo:
     Type: AWS::Lambda::Permission

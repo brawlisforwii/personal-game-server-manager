@@ -15,7 +15,7 @@ const localConfigFile = ".env"
 //
 // AWS_ACCOUNT=123456789012
 // AWS_REGION=eu-central-1
-// ASSET_BUCKET_NAME=replace-with-your-valheim-assets-bucket
+// ASSET_BUCKET_NAME=replace-with-your-assets-bucket
 // CREATE_ASSET_BUCKET=true
 // ASSET_KEY_PREFIX=personal-game-server-manager/v1
 //
