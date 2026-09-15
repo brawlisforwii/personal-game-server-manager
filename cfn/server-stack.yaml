@@ -488,7 +488,7 @@ Resources:
       Description: Custom resource lambda to obtain source IP address range for EC2 Instance Connect in current region
       Role: !GetAtt GetSrcIpsLambdaIamRole.Arn
       Handler: index.lambda_handler
-      Runtime: python3.8
+      Runtime: python3.14
       Timeout: 10
 
   GetInstanceConnectIps:
@@ -576,7 +576,7 @@ Resources:
       Description: Stops this stack's own EC2 instance on the daily auto-shutdown schedule
       Handler: index.lambda_handler
       Role: !GetAtt BedTimeStopLambdaIamRole.Arn
-      Runtime: python3.8
+      Runtime: python3.14
       Timeout: 10
 
   BedTime:
