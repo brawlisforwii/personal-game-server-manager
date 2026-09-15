@@ -795,7 +795,7 @@ Resources:
       Description: Custom resource lambda to copy required code files from github to S3
       Role: !GetAtt CustomResourceLambdaIamRole.Arn
       Handler: index.lambda_handler
-      Runtime: python3.8
+      Runtime: python3.14
       Timeout: 10
 
   UpdateConfigLambda:
@@ -836,7 +836,7 @@ Resources:
       Description: Custom resource lambda to update config files on stack build complete
       Role: !GetAtt CustomResourceLambdaIamRole.Arn
       Handler: index.lambda_handler
-      Runtime: python3.8
+      Runtime: python3.14
       Timeout: 10
 
   AcmCertificateLambda:
@@ -911,7 +911,7 @@ Resources:
       Description: Custom resource lambda to request and DNS-validate an ACM certificate for the front-end CloudFront distribution
       Role: !GetAtt AcmCertLambdaIamRole.Arn
       Handler: index.lambda_handler
-      Runtime: python3.8
+      Runtime: python3.14
       Timeout: 900
 
   StartStopLambda:
@@ -933,7 +933,7 @@ Resources:
       MemorySize: 128
       PackageType: Zip
       Role: !GetAtt StartStopLambdaIamRole.Arn
-      Runtime: python3.8
+      Runtime: python3.14
       Timeout: 10
 
   UpdateDnsLambda:
@@ -948,7 +948,7 @@ Resources:
       MemorySize: 128
       PackageType: Zip
       Role: !GetAtt UpdateDnsLambdaIamRole.Arn
-      Runtime: python3.8
+      Runtime: python3.14
       Timeout: 10
 
   LambdaSourceFilesS3:
