@@ -580,9 +580,13 @@ Resources:
       Timeout: 10
 
   BedTime:
-    Type: AWS::Events::Rule
+    Type: AWS::Scheduler::Schedule
     Properties:
-      Description: Rule to shutdown server at certain time every day
+      Description: Schedule to shutdown server at certain time every day
+      State: !If
+        - ShutdownTimeHoursIsNull
+        - DISABLED
+        - ENABLED
       ScheduleExpression: !Join
         - ''
         - - 'cron('
@@ -596,14 +600,32 @@ Resources:
             - '0'
             - !Ref ShutdownTimeHours
           - ' * * ? *)'
-      State: !If
-        - ShutdownTimeHoursIsNull
-        - DISABLED
-        - ENABLED
-      Targets:
-        -   Arn: !GetAtt BedTimeStopLambda.Arn
-            Id: BedTimeStopLambdaFunction
-            Input: !Sub '{"instanceId": "${EC2Instance}"}'
+      FlexibleTimeWindow:
+        Mode: OFF
+      Target:
+        Arn: !GetAtt BedTimeStopLambda.Arn
+        RoleArn: !GetAtt BedTimeSchedulerRole.Arn
+        Input: !Sub '{"instanceId": "${EC2Instance}"}'
+
+  BedTimeSchedulerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeBedTimeStopLambda
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt BedTimeStopLambda.Arn
 
   BedTimeLambdaPermission:
     Type: AWS::Lambda::Permission
