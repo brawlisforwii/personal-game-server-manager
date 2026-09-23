@@ -98,7 +98,7 @@ Parameters:
       is the size of the Linux AMI)
     AllowedPattern: '^([8-9]|([1-9]\d{1,}))$'
     ConstraintDescription: You must choose a disk size of at least 8 GiB
-    Default: '8'
+    Default: '10'
     Type: String
   DiskType:
     Description: Choose disk type.  GP3 is recommended
@@ -579,6 +579,14 @@ Resources:
       Runtime: python3.14
       Timeout: 10
 
+  BedTimeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref BedTimeStopLambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt BedTime.Arn
+
   BedTime:
     Type: AWS::Scheduler::Schedule
     Properties:
@@ -626,14 +634,6 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource: !GetAtt BedTimeStopLambda.Arn
-
-  BedTimeLambdaPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref BedTimeStopLambda
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt BedTime.Arn
 
 Outputs:
   PublicIp:
